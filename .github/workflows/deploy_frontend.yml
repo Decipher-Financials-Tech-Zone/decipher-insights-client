@@ -45,7 +45,7 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: deploy
+          username: root
           key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
           source: "deploy.zip"
           target: "/var/www/decipher_insights_client/"
@@ -54,7 +54,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: deploy
+          username: root
           key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
           script: |
             cd /var/www/decipher_insights_client
