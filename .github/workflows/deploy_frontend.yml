@@ -9,21 +9,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-     NEXT_PUBLIC_BASE_URL: ${{ secrets.BASE_URL }}
-     BACKEND_BASE_URL: ${{ secrets.BASE_URL }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Cache npm
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,8 +25,7 @@ jobs:
       - name: Build project
         run: npm run build
 
-
-      - name: Create zip file (Production Only)
+      - name: Create deployment ZIP
         run: zip -r deploy.zip .next public ecosystem.config.js package.json package-lock.json
 
       - name: Upload ZIP to VPS
@@ -48,7 +35,7 @@ jobs:
           username: root
           key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
           source: "deploy.zip"
-          target: "/var/www/decipher_insights_client/"
+          target: "/var/www/decipher-insights-client/"
 
       - name: Extract & deploy on VPS
         uses: appleboy/ssh-action@v1.0.3
@@ -57,9 +44,10 @@ jobs:
           username: root
           key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
           script: |
-            cd /var/www/decipher_insights_client
+            cd /var/www/decipher-insights-client
             unzip -o deploy.zip
             rm deploy.zip
             npm install --production
-            pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+            pm2 delete decipher_insights_client || true
+            pm2 start ecosystem.config.js
             pm2 save
