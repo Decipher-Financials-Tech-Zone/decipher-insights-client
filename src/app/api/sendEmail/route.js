@@ -65,8 +65,8 @@ export async function POST(req) {
               <p><span class="label">Number of WFH Days:</span> ${submission.numWfhDays}</p>
             </div>
             <div class="actions">
-             <a href="${process.env.BACKEND_BASE_URL}api/wfh/approve/${submission.id}?approved=true" class="btn approve">✅ Approve</a>
-             <a href="${process.env.BACKEND_BASE_URL}api/wfh/approve/${submission.id}?approved=false" class="btn reject">❌ Reject</a>
+             <a href="${process.env.NEXT_PUBLIC_BASE_URL}api/wfh/approve/${submission.id}?approved=true" class="btn approve">✅ Approve</a>
+             <a href="${process.env.NEXT_PUBLIC_BASE_URL}api/wfh/approve/${submission.id}?approved=false" class="btn reject">❌ Reject</a>
             </div>
             <div class="footer">
               This is an automated email. Please do not reply directly.<br/>
