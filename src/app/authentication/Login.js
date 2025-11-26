@@ -131,7 +131,7 @@ const Login = () => {
                 color="primary"
                 onClick={() => setForgotOpen(true)}
               >
-                Forgot Password? Click here to get temporary password.
+                Forgot Password?
               </Typography>
 
               <Button
