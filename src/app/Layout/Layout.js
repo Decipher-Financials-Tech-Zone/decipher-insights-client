@@ -18,21 +18,18 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-import TaskSheet from "../Features/TaskSheet/TaskSheet";
-import TaskSheetAdmin from "../Features/TaskSheetAdmin/TaskSheetAdmin";
-import { Stack } from "@mui/material";
-import UserDialogueBox from "../user/UserDialogueBox";
-import All_Tasks from "../Features/TaskSheetHistory/All_Tasks";
-import { AuthContext } from "@/context/AuthContext";
-import ResetPassword from "../Features/Reset_Password/Reset_password_form";
 import AddTaskIcon from "@mui/icons-material/AddTask";
 import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
-import PeopleIcon from "@mui/icons-material/People";
-import Recruitment from "../Features/HR_Portal/Recruitment/Recruitment";
+
+import { Stack } from "@mui/material";
+import Image from "next/image";
+
 import Request_form from "../Features/Request_form/Request_form";
 import Request_approval from "../Features/Request_Approval/Request_approval";
-import Image from "next/image";
+import TaskSheetAdmin from "../Features/TaskSheetAdmin/TaskSheetAdmin";
+import UserDialogueBox from "../user/UserDialogueBox";
+
+import { AuthContext } from "@/context/AuthContext";
 
 const drawerWidth = 240;
 
@@ -62,76 +59,68 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "flex-end",
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
-})(({ theme }) => ({
+})(({ theme, open }) => ({
   zIndex: theme.zIndex.drawer + 1,
   transition: theme.transitions.create(["width", "margin"], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  variants: [
-    {
-      props: ({ open }) => open,
-      style: {
-        marginLeft: drawerWidth,
-        width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(["width", "margin"], {
-          easing: theme.transitions.easing.sharp,
-          duration: theme.transitions.duration.enteringScreen,
-        }),
-      },
-    },
-  ],
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(["width", "margin"], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
 }));
 
 const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
-})(({ theme }) => ({
+})(({ theme, open }) => ({
   width: drawerWidth,
   flexShrink: 0,
   whiteSpace: "nowrap",
   boxSizing: "border-box",
-  variants: [
-    {
-      props: ({ open }) => open,
-      style: {
-        ...openedMixin(theme),
-        "& .MuiDrawer-paper": openedMixin(theme),
-      },
-    },
-    {
-      props: ({ open }) => !open,
-      style: {
-        ...closedMixin(theme),
-        "& .MuiDrawer-paper": closedMixin(theme),
-      },
-    },
-  ],
+  ...(open && {
+    ...openedMixin(theme),
+    "& .MuiDrawer-paper": openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    "& .MuiDrawer-paper": closedMixin(theme),
+  }),
 }));
 
 export default function Layout({ handleLogout, loggingOut }) {
   const { userDetails } = useContext(AuthContext);
-
   const theme = useTheme();
   const [open, setOpen] = React.useState(true);
   const [activeMenuItem, setActiveMenuItem] = useState(0);
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
+  // ---- ROLE-BASED MENUS ----
+  const menuItems = userDetails?.isAdmin
+    ? [
+      { label: "Request Form", icon: <AssignmentIcon /> },
+        { label: "Request Approval", icon: <AddTaskIcon /> },
+        { label: "Task Sheet Admin", icon: <WorkHistoryIcon /> },
+        
+      ]
+    : [{ label: "Request Form", icon: <AssignmentIcon /> }];
 
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
+  const handleDrawerOpen = () => setOpen(true);
+  const handleDrawerClose = () => setOpen(false);
 
   return (
     <Box sx={{ display: "flex" }}>
       <CssBaseline />
+
+      {/* ---------------- TOP APP BAR ---------------- */}
       <AppBar position="fixed" open={open}>
         <Toolbar>
           <IconButton
@@ -139,15 +128,11 @@ export default function Layout({ handleLogout, loggingOut }) {
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
-            sx={[
-              {
-                marginRight: 5,
-              },
-              open && { display: "none" },
-            ]}
+            sx={[{ marginRight: 5 }, open && { display: "none" }]}
           >
             <MenuIcon />
           </IconButton>
+
           <Stack
             direction="row"
             spacing={2}
@@ -157,7 +142,7 @@ export default function Layout({ handleLogout, loggingOut }) {
               width: "100%",
             }}
           >
-            <Typography variant="h6" noWrap component="div">
+            <Typography variant="h6" noWrap>
               Decipher Insights
             </Typography>
 
@@ -169,6 +154,8 @@ export default function Layout({ handleLogout, loggingOut }) {
           </Stack>
         </Toolbar>
       </AppBar>
+
+      {/* ---------------- SIDE DRAWER ---------------- */}
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
           <Image
@@ -180,75 +167,63 @@ export default function Layout({ handleLogout, loggingOut }) {
           />
 
           <IconButton onClick={handleDrawerClose}>
-            {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
+            {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
           </IconButton>
         </DrawerHeader>
+
         <Divider />
+
+        {/* ----------- DYNAMIC ROLE-BASED MENU ----------- */}
         <List>
-          {/* ['News', 'Task Sheet', 'Task Sheet Admin'] */}
-          {["Request Form", "Request Approval", "Task Sheet Admin"].map(
-            (text, index) => (
-              <ListItem
-                key={text}
-                disablePadding
-                sx={{ display: "block" }}
-                onClick={() => setActiveMenuItem(index)}
+          {menuItems.map((item, index) => (
+            <ListItem
+              key={item.label}
+              disablePadding
+              sx={{ display: "block" }}
+              onClick={() => setActiveMenuItem(index)}
+            >
+              <ListItemButton
+                sx={[
+                  { minHeight: 48, px: 2.5 },
+                  open ? { justifyContent: "initial" } : { justifyContent: "center" },
+                ]}
               >
-                <ListItemButton
+                <ListItemIcon
                   sx={[
-                    {
-                      minHeight: 48,
-                      px: 2.5,
-                    },
-                    open
-                      ? { justifyContent: "initial" }
-                      : { justifyContent: "center" },
+                    { minWidth: 0, justifyContent: "center" },
+                    open ? { mr: 3 } : { mr: "auto" },
                   ]}
                 >
-                  <ListItemIcon
-                    sx={[
-                      {
-                        minWidth: 0,
-                        justifyContent: "center",
-                      },
-                      open ? { mr: 3 } : { mr: "auto" },
-                    ]}
-                  >
-                    {index === 0 ? (
-                      <AssignmentIcon />
-                    ) : index == 1 ? (
-                      <AddTaskIcon />
-                    ) : (
-                      <WorkHistoryIcon />
-                    )}
-                  </ListItemIcon>
+                  {item.icon}
+                </ListItemIcon>
 
-                  <ListItemText
-                    primary={text}
-                    sx={[open ? { opacity: 1 } : { opacity: 0 }]}
-                  />
-                </ListItemButton>
-              </ListItem>
-            )
-          )}
+                <ListItemText
+                  primary={item.label}
+                  sx={[open ? { opacity: 1 } : { opacity: 0 }]}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
         </List>
+
         <Divider />
       </Drawer>
+
+      {/* ---------------- MAIN CONTENT AREA ---------------- */}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
 
-        {activeMenuItem == 0 ? (
-          <Request_form />
-        ) : activeMenuItem == 1 ? (
-          <Request_approval />
-        ) : activeMenuItem == 2 ? (
-          <TaskSheetAdmin />
+        {/* ---- ROLE-BASED VIEW RENDERING ---- */}
+        {userDetails?.isAdmin ? (
+          <>
+            {activeMenuItem === 0 && <Request_approval />}
+            {activeMenuItem === 1 && <TaskSheetAdmin />}
+            {activeMenuItem === 2 && <Request_form />}
+          </>
         ) : (
-          <Recruitment />
+          <>
+            {activeMenuItem === 0 && <Request_form />}
+          </>
         )}
       </Box>
     </Box>
