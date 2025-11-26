@@ -216,9 +216,9 @@ export default function Layout({ handleLogout, loggingOut }) {
         {/* ---- ROLE-BASED VIEW RENDERING ---- */}
         {userDetails?.isAdmin ? (
           <>
-            {activeMenuItem === 0 && <Request_approval />}
-            {activeMenuItem === 1 && <TaskSheetAdmin />}
-            {activeMenuItem === 2 && <Request_form />}
+          {activeMenuItem === 0 && <Request_form />}
+            {activeMenuItem === 1 && <Request_approval />}
+            {activeMenuItem === 2 && <TaskSheetAdmin />}
           </>
         ) : (
           <>
