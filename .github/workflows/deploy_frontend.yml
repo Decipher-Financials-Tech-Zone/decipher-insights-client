@@ -16,17 +16,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'npm'
+          node-version: 20.19.5
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build project
+      - name: Build test (local)
         run: npm run build
 
+
       - name: Create deployment ZIP
-        run: zip -r deploy.zip .next public ecosystem.config.js package.json package-lock.json
+        run: |
+          zip -r deploy.zip . \
+            -x "node_modules/*" \
+            -x ".next/*" \
+            -x ".git/*" \
+            -x ".github/*"
 
       - name: Upload ZIP to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -45,9 +51,24 @@ jobs:
           key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
           script: |
             cd /var/www/decipher-insights-client
+
+            echo "📦 Unzipping deployment..."
             unzip -o deploy.zip
-            rm deploy.zip
+            rm -f deploy.zip
+
+            echo "🧹 Cleaning old build and dependencies..."
+            rm -rf node_modules
+            rm -rf .next
+
+            echo "📦 Installing production dependencies..."
             npm install --production
+
+            echo "🏗️ Building Next.js project on VPS..."
+            npm run build
+
+            echo "🔁 Restarting PM2..."
             pm2 delete decipher_insights_client || true
             pm2 start ecosystem.config.js
             pm2 save
+
+            echo "🚀 Deployment Complete!"
