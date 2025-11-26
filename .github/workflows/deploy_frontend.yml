@@ -13,62 +13,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          node-version: 20.19.5
-          cache: "npm"
+          ssh-private-key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build test (local)
-        run: npm run build
-
-
-      - name: Create deployment ZIP
+      - name: 🚀 Deploy to Hostinger VPS
         run: |
-          zip -r deploy.zip . \
-            -x "node_modules/*" \
-            -x ".next/*" \
-            -x ".git/*" \
-            -x ".github/*"
-
-      - name: Upload ZIP to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: root
-          key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
-          source: "deploy.zip"
-          target: "/var/www/decipher-insights-client/"
-
-      - name: Extract & deploy on VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: root
-          key: ${{ secrets.HOSTINGER_FRONTEND_SSH_KEY }}
-          script: |
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
             cd /var/www/decipher-insights-client
 
-            echo "📦 Unzipping deployment..."
-            unzip -o deploy.zip
-            rm -f deploy.zip
-
-            echo "🧹 Cleaning old build and dependencies..."
-            rm -rf node_modules
-            rm -rf .next
+            echo "🔄 Pulling latest code..."
+            git fetch --all
+            git reset --hard origin/main
 
             echo "📦 Installing production dependencies..."
             npm install --production
 
-            echo "🏗️ Building Next.js project on VPS..."
+            echo "🏗️ Building Next.js project..."
             npm run build
 
             echo "🔁 Restarting PM2..."
-            pm2 delete decipher_insights_client || true
-            pm2 start ecosystem.config.js
-            pm2 save
+            pm2 restart decipher_insights_client || pm2 start ecosystem.config.js --only decipher_insights_client
 
-            echo "🚀 Deployment Complete!"
+            pm2 save
+            echo "🚀 Deployment completed successfully!"
+          EOF
